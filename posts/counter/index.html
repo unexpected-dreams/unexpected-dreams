@@ -30,17 +30,19 @@
 <li>Display the digit in each place for the old prize</li>
 <li>Create &#x26; spin a roller for each place, from the old prize digit to the new prize digit</li>
 <li>Spin the rollers on the right faster than the ones on the left</li>
-<li>Let the roller be reusable</li>
+<li>Make the roller be reusable</li>
 </ul>
 <hr>
 <h2 id="2-digits">2. Digits</h2>
-<p>First order of business, parsing out the digits in each place — eg. <code>135642</code> into:
-<code>1</code> in the hundred thousands
-<code>3</code> in the ten thousands
-<code>5</code> in the thousand
-<code>2</code> in the hundreds
-<code>4</code> in the tens
-<code>6</code> in the ones</p>
+<p>First order of business, parsing out the digits in each place — eg. <code>135642</code> into:</p>
+<ul>
+<li><code>1</code> in the hundred thousands</li>
+<li><code>3</code> in the ten thousands</li>
+<li><code>5</code> in the thousand</li>
+<li><code>2</code> in the hundreds</li>
+<li><code>4</code> in the tens</li>
+<li><code>6</code> in the ones</li>
+</ul>
 <p>The rigorously CORRECT way to do this is to perform math with a modulus operator:</p>
 <pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0"><code><span class="line"><span style="color:#F97583">    let</span><span style="color:#E1E4E8"> prize   </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 135642</span><span style="color:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> p0</span><span style="color:#F97583">    =</span><span style="color:#E1E4E8"> (prize </span><span style="color:#F97583">%</span><span style="color:#79B8FF"> 10</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">/</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">; </span></span>
