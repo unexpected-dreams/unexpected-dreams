@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>money money</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+            body {
+                background: transparent;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            #counterC {
+                width: fit-content;
+                color: #e5adff;
+                font-family: 'Orbitron';
+                font-weight: bold;
+            }
+                #label {
+                    font-size: 1.25rem;
+                }
+                #counter {
+                    font-size: 2.75rem;
+                    display: flex;
+                    align-items: center;
+                    height: var(--h);
+                    width: fit-content;
+                    margin: 1rem 0;   
+                    gap: 0.5rem;
+                    --w: 4.5rem;
+                    --h: 4.5rem;
+                }
+                .rollerC {
+                    position: relative;
+                    height: var(--h);
+                    min-width: var(--w);
+                    width: var(--w);
+                    overflow: hidden;
+                    mask-image: linear-gradient(transparent,black,black,black,transparent);
+                    -webkit-mask-image: linear-gradient(transparent,black,black,black,transparent);
+                    padding-bottom: 0.5rem;
+                    background: rgb(54, 54, 54);
+                    border: 1px solid;
+                }
+                    .rollerC::after {
+                        /* content: ''; */
+                        width: var(--w);
+                        height: 0.25rem;
+                        background: currentColor;
+                        position: absolute;
+                        bottom: 0.25rem;
+                    }
+                    .roller {
+                        width: 100%;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        transition: cubic-bezier(.71,.01,.14,.98);
+                        transition-duration: var(--anim_dur);
+                        transition-delay: var(--anim_delay);
+                    }
+                        .number {
+                            height: var(--h);
+                            width: var(--w);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            border-bottom:1px solid color-mix(in srgb,currentColor,transparent 90%);
+                            border-top:1px solid color-mix(in srgb,currentColor,transparent 90%);
+                        }
+            #inputC {
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+            }
+                #counter_input {
+                    background: black;
+                    color: white;
+                    width: 10rem;
+                    font-size: 1.5rem;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-radius: 0.35rem;
+                    padding: 0.25rem 1rem;
+                    text-align: right;
+                }
+                    #counter_input:focus-visible {
+                        outline: none;
+                        filter: drop-shadow(0 0 0.75rem #ffffff26);
+                    }
+                #run_counter {
+                    background: black;
+                    font-size: 1.2rem;
+                    padding: 0.15rem 0.35rem;
+                    border-radius: 0.3rem;
+                    color: white;
+                    transition: all 0.35s;
+                    border: 2px solid #ffffff61;
+                    outline: 2px solid transparent;
+                }
+                    #run_counter:hover:not(:disabled) {
+                        cursor: pointer;
+                        filter: drop-shadow(0 0 0.5rem #e5adff);
+                        outline: 2px solid #e5adff;
+                    }
+                    #run_counter:disabled {
+                        opacity: 0.9;
+                        color: #9d9d9d;
+                    }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script>
+            // add listeners
+            $(document).on('DOMContentLoaded', function() {
+                $('#run_counter').on('click', function() {
+                    if (! input_disabled) {
+                        run_counter();
+                    }
+                });
+                $('#counter_input').on('keypress', function(e) {
+                    if (e.key === 'Enter' && ! input_disabled) {
+                        run_counter();
+                    }
+                });
+                $('#counter_input').on('input', function() {
+                    const val_display =   "$"
+                                    + Number(
+                                        $(this).val()
+                                            .replace(/[^0-9]/g,'')
+                                            .substring(0,placeMax + 1)
+                                    ).toLocaleString("en-US");
+                    $(this).val(val_display);
+
+                });
+                $('#counter_input').val('$2,099');
+            });
+
+            // init vars
+            const placeMax = 8;
+            let place_largest = 8;
+            let input_disabled = false;
+            let val_current = 3000;
+            let val_new = 0;
+            let val_delta = 0;
+            let anim_dur = 1000;
+
+            // counter function
+            const run_counter = function() {
+
+                // stop input
+                input_disabled = true;
+                $('#run_counter').prop('disabled',true);
+
+                // grab & clear input
+                val_new = Number($('#counter_input').val().replace(/[^0-9]/g,''));
+                $("#counter_input").val('');
+
+                val_delta = val_new - val_current;
+                place_largest = Math.min(String(Math.max(val_current,val_new)).length - 1,placeMax);
+                
+                // adjust animation duration length based off delta
+                anim_dur = 
+                    2000 +
+                    Math.min(Math.abs(val_delta) / Math.pow(10, placeMax / 2),1) * 2000 +
+                    Math.min(Math.abs(val_delta) / Math.pow(10, placeMax),1) * 2000 +
+                    Math.min(Math.abs(val_delta) / Math.pow(10, placeMax + 1),1) * 2000;
+
+                // generate rollers
+                const args = {
+                    sign: val_delta >= 0 ? 1 : -1,
+                    place: place_largest,
+                }
+                generate_roller(args);
+                generate_final();
+
+                // remove roller after animation, show final number
+                let delay = anim_dur * 1.1 + 100 * placeMax + 40;
+                setTimeout( function() {
+                    $('.roller[data-state="new"]').css('visibility','visible');
+                }, delay)
+                delay += 40;
+                setTimeout( function() {
+                    $('.roller[data-state="old"]').remove();
+                    $('.roller').attr('data-state','');
+                }, delay)
+
+                // update resume input
+                delay += 500;
+                setTimeout( function() {
+                    val_current = val_new;
+                    input_disabled = false;
+                    $('#run_counter').prop('disabled',false);
+                }, delay)
+
+            };
+
+            const generate_roller = function(args) {
+
+                const {sign,place} = args;
+
+                const num_h = Number($('#counter').css('--h').replace('rem',''));
+
+                const _old = String(val_current).padStart(placeMax + 1,"0");
+                const tick_current = 
+                    Number(_old[_old.length - 1 - place]);
+
+                const _new = String(val_new).padStart(placeMax + 1,"0");
+                const tick_new = 
+                    Number(_new[_new.length - 1 - place]);
+
+
+                // generate extra spin counter
+                const placeMax_delta = String(Math.abs(val_delta)).length - 1;
+                const spin_extra = Math.max(0, placeMax_delta - place);
+
+                let i = 1;
+                    
+                // extra + 10 if need to loop
+                const count_base = ((10 + (tick_new - tick_current) * sign) % 10);
+                // ElevenFunky checker
+                // make loop at least once
+                // const count = (count_base === 0) && (place === placeMax_delta)
+                //                 ? 10
+                //                 : 10 * spin_extra + count_base;
+                const count = count_base + spin_extra * 10;
+
+                while (i <= count) {
+                    const args = {
+                        type  : 'roller',
+                        sign  : sign,
+                        place : place,
+                        i     : i,
+                        tick  : (   Math.pow(10,placeMax + 1) + 
+                                    tick_current + 
+                                    i * sign
+                                ) % 10,
+                    };
+                    console.log(args);
+                    generate_tick(args);
+                    i++;
+                }
+
+                //animate roller
+                $(`.rollerC[data-place="${place}"] .roller`)
+                    .css({
+                        '--anim_dur'   : anim_dur * (1 + Math.random() / 10) + 'ms',
+                        '--anim_delay' : place * 100 + 'ms',
+                        'top'          : count * num_h * -1 * sign + 'rem',
+                    });
+
+
+                // create next roller if applicable
+                const place_next = place - 1;
+                if (place_next >= 0) {
+                    const args = {
+                        sign: sign,
+                        place: place_next,
+                    }
+                    generate_roller(args);
+                }
+            }
+
+            const generate_tick = function(args) {
+
+                const {type,sign,place,i,tick} = args;
+
+                const $tick = $(document.createElement('div'))
+                                    .addClass('number')
+                                    .html(tick);
+
+                if (type === 'roller') {
+                    const num_h = Number($('#counter').css('--h').replace('rem',''));
+                    const top   =   type !== 'roller'
+                                        ? '0rem'
+                                :   num_h * i * sign + 'rem';
+                    $tick.css({
+                                left: '0rem',
+                                top:  top,
+                            });
+
+                    $tick.appendTo($(`.rollerC[data-place="${place}"] .roller`));
+                }
+                else {
+                    $tick.appendTo($(`.rollerC[data-place="${place}"] .roller[data-state="new"]`));
+                }
+
+            };
+
+            const generate_final = function() {
+                const val_string = String(val_new).padStart(placeMax + 1,'0');
+                $('.roller').attr('data-state','old');
+                for (let i = 0; i <= placeMax; i++) {
+                    $(document.createElement('div'))
+                                            .addClass('roller')
+                                            .attr('data-state','new')
+                                            .css({
+                                                visibility: 'hidden',
+                                                top: '0rem',
+                                            })
+                                            .appendTo($(`.rollerC[data-place="${i}"]`));
+                    const args = {
+                        type: 'final',
+                        place: i,
+                        tick: val_string[val_string.length - 1 - i],
+                    }
+                    generate_tick(args);
+                }
+            };
+        </script>
+    </head>
+    <body> 
+        <div id='counterC'>
+            <div id='label'>CASH PRIZE</div>
+            <div id='counter'>
+                <div class='dollar'>$</div>
+                <div class='rollerC' data-place='8'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='7'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='6'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='comma'>,</div>
+                <div class='rollerC' data-place='5'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='4'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='3'>
+                    <div class='roller'>
+                        <div class='number'>3</div>
+                    </div>
+                </div>
+                <div class='comma'>,</div>
+                <div class='rollerC' data-place='2'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='1'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+                <div class='rollerC' data-place='0'>
+                    <div class='roller'>
+                        <div class='number'>0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="inputC">
+            <input type='text' id='counter_input'>
+            <button id='run_counter'>Enter</button>
+        </div>
+    </body>
+</html>
